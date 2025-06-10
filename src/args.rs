@@ -10,31 +10,66 @@ pub struct ParsedArgs {
 
 impl ParsedArgs {
     fn usage_string(program_name: &str) -> String {
-        format!("Usage: {} [-n] [-i] [-c] [-v] <pattern> <filename>", program_name)
+        format!(
+            "Usage: {} [OPTIONS] <PATTERN> <FILE(S)...>\n\n\
+            Options:\n  \
+            -n    Show line numbers\n  \
+            -i    Case-insensitive search\n  \
+            -c    Count matches only\n  \
+            -v    Invert match (show non-matching lines)\n  \
+            -w    Match whole words only\n  \
+            -V    Verbose mode\n\n\
+            Examples:\n  \
+            {} \"hello\" file.txt\n  \
+            {} -n \"error\" *.log\n  \
+            {} -i \"TODO\" src/*.rs",
+            program_name, program_name, program_name, program_name
+        )
     }
 }
 
 pub fn parse_args(args: &[String]) -> Result<ParsedArgs> {
     if args.is_empty() {
         return Err(RepError::InvalidArguments(
-            "No arguments provided".to_string()
+            "No program name provided (this is unusual - are you calling this correctly?)".to_string()
         ));
     }
     
     let program_name = &args[0];
     
-    if args.len() < 3 {
-        return Err(RepError::InvalidArguments(
+    // Check for help flag
+    if args.len() >= 2 && (args[1] == "--help" || args[1] == "-h") {
+        return Err(RepError::Help(
             ParsedArgs::usage_string(program_name)
         ));
+    }
+    
+    if args.len() < 3 {
+        let error_msg = if args.len() == 1 {
+            format!("Missing search pattern and file(s)\n\n{}", ParsedArgs::usage_string(program_name))
+        } else if args.len() == 2 {
+            format!("Missing file(s) to search in\n\n{}", ParsedArgs::usage_string(program_name))
+        } else {
+            ParsedArgs::usage_string(program_name)
+        };
+        
+        return Err(RepError::InvalidArguments(error_msg));
     }
     
     let flags = parse_flags(args);
     let non_flag_args = extract_non_flag_args(args);
     
+    if non_flag_args.is_empty() {
+        return Err(RepError::InvalidArguments(
+            format!("No search pattern provided - all arguments appear to be flags\n\n{}", 
+                    ParsedArgs::usage_string(program_name))
+        ));
+    }
+    
     if non_flag_args.len() < 2 {
         return Err(RepError::InvalidArguments(
-            ParsedArgs::usage_string(program_name)
+            format!("No files specified to search in\n\n{}", 
+                    ParsedArgs::usage_string(program_name))
         ));
     }
     

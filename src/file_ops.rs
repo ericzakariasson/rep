@@ -9,16 +9,27 @@ pub fn expand_file_patterns(patterns: &[String]) -> Result<Vec<PathBuf>> {
     for pattern in patterns {
         match glob(pattern) {
             Ok(paths) => {
+                let mut pattern_matched = false;
                 for entry in paths {
                     match entry {
-                        Ok(path) => file_paths.push(path),
-                        Err(e) => return Err(RepError::GlobPatternError(e.to_string())),
+                        Ok(path) => {
+                            pattern_matched = true;
+                            file_paths.push(path);
+                        },
+                        Err(e) => return Err(RepError::GlobPatternError(
+                            format!("Failed to process '{}': {}", pattern, e)
+                        )),
                     }
+                }
+                // Check if this specific pattern matched any files
+                if !pattern_matched && !pattern.contains('*') && !pattern.contains('?') && !pattern.contains('[') {
+                    // This looks like a specific filename that doesn't exist
+                    return Err(RepError::FileNotFound(pattern.clone()));
                 }
             }
             Err(e) => {
                 return Err(RepError::GlobPatternError(
-                    format!("Invalid glob pattern '{}': {}", pattern, e)
+                    format!("'{}' is not a valid file pattern: {}", pattern, e)
                 ));
             }
         }
@@ -36,9 +47,18 @@ pub fn read_file_contents(path: &PathBuf) -> Result<String> {
         Ok(contents) => Ok(contents),
         Err(e) => {
             let filename = path.to_string_lossy();
-            Err(RepError::IoError(
-                format!("Error reading file {}: {}", filename, e)
-            ))
+            let error_msg = match e.kind() {
+                std::io::ErrorKind::NotFound => {
+                    format!("'{}' does not exist", filename)
+                }
+                std::io::ErrorKind::PermissionDenied => {
+                    format!("Permission denied: cannot read '{}'", filename)
+                }
+                _ => {
+                    format!("Cannot read '{}': {}", filename, e)
+                }
+            };
+            Err(RepError::IoError(error_msg))
         }
     }
 }
