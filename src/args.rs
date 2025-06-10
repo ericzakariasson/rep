@@ -10,22 +10,27 @@ pub struct ParsedArgs {
 
 impl ParsedArgs {
     fn usage_string(program_name: &str) -> String {
-        format!("Usage: {} [-n] [-i] [-c] [-v] <pattern> <filename>", program_name)
+        format!("Usage: {} [OPTIONS] PATTERN FILE...\n\nOptions:\n  -n    Show line numbers\n  -i    Case-insensitive search\n  -c    Count matches only\n  -v    Invert match (show non-matching lines)", program_name)
     }
 }
 
 pub fn parse_args(args: &[String]) -> Result<ParsedArgs> {
     if args.is_empty() {
         return Err(RepError::InvalidArguments(
-            "No arguments provided".to_string()
+            "No program name found".to_string()
         ));
     }
     
     let program_name = &args[0];
     
     if args.len() < 3 {
+        let missing = if args.len() == 1 {
+            "both a search pattern and file(s)"
+        } else {
+            "file(s) to search in"
+        };
         return Err(RepError::InvalidArguments(
-            ParsedArgs::usage_string(program_name)
+            format!("Missing {}.\n\n{}", missing, ParsedArgs::usage_string(program_name))
         ));
     }
     
@@ -34,7 +39,7 @@ pub fn parse_args(args: &[String]) -> Result<ParsedArgs> {
     
     if non_flag_args.len() < 2 {
         return Err(RepError::InvalidArguments(
-            ParsedArgs::usage_string(program_name)
+            format!("Not enough arguments after flags.\n\n{}", ParsedArgs::usage_string(program_name))
         ));
     }
     

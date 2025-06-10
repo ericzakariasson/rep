@@ -12,13 +12,15 @@ pub fn expand_file_patterns(patterns: &[String]) -> Result<Vec<PathBuf>> {
                 for entry in paths {
                     match entry {
                         Ok(path) => file_paths.push(path),
-                        Err(e) => return Err(RepError::GlobPatternError(e.to_string())),
+                        Err(e) => return Err(RepError::GlobPatternError(
+                            format!("Failed to read path '{}': {}", pattern, e)
+                        )),
                     }
                 }
             }
             Err(e) => {
                 return Err(RepError::GlobPatternError(
-                    format!("Invalid glob pattern '{}': {}", pattern, e)
+                    format!("'{}' - {}", pattern, e)
                 ));
             }
         }
@@ -36,9 +38,18 @@ pub fn read_file_contents(path: &PathBuf) -> Result<String> {
         Ok(contents) => Ok(contents),
         Err(e) => {
             let filename = path.to_string_lossy();
-            Err(RepError::IoError(
-                format!("Error reading file {}: {}", filename, e)
-            ))
+            let error_msg = match e.kind() {
+                std::io::ErrorKind::PermissionDenied => {
+                    format!("Permission denied when reading '{}'", filename)
+                }
+                std::io::ErrorKind::NotFound => {
+                    return Err(RepError::FileNotFound(filename.to_string()));
+                }
+                _ => {
+                    format!("Cannot read '{}' - {}", filename, e)
+                }
+            };
+            Err(RepError::IoError(error_msg))
         }
     }
 }
