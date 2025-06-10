@@ -44,7 +44,3 @@ Run in development mode:
 ```bash
 cargo run -- "pattern" file.txt
 ```
-
-## License
-
-This project is open source. 
