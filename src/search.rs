@@ -26,18 +26,12 @@ impl SearchConfig {
 }
 
 pub fn search(content: &str, pattern: &str, config: &SearchConfig) -> SearchResult {
-    let pattern_lower = if config.case_insensitive {
-        pattern.to_lowercase()
-    } else {
-        pattern.to_string()
-    };
-    
     let matches: Vec<MatchedLine> = content
         .lines()
         .enumerate()
         .filter_map(|(line_number, line)| {
             let is_match = if config.case_insensitive {
-                line.to_lowercase().contains(&pattern_lower)
+                line.to_lowercase().contains(&pattern.to_lowercase())
             } else {
                 line.contains(pattern)
             };
