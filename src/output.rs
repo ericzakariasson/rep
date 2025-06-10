@@ -21,17 +21,20 @@ pub struct OutputConfig {
     pub mode: OutputMode,
     pub show_line_numbers: bool,
     pub show_filename: bool,
+    pub verbose: bool,
 }
 
 impl OutputConfig {
     pub fn new(flags: &[Flag], multiple_files: bool) -> Self {
         let mode = OutputMode::from_flags(flags);
         let show_line_numbers = flags.contains(&Flag::LineNumbers) && mode != OutputMode::Count;
+        let verbose = flags.contains(&Flag::Verbose);
         
         Self {
             mode,
             show_line_numbers,
             show_filename: multiple_files,
+            verbose,
         }
     }
 }
@@ -95,6 +98,7 @@ mod tests {
             mode: OutputMode::FullLines,
             show_line_numbers: false,
             show_filename: false,
+            verbose: false,
         };
         assert_eq!(format_match("test line", 0, None, &config), "test line");
 
@@ -102,6 +106,7 @@ mod tests {
             mode: OutputMode::FullLines,
             show_line_numbers: true,
             show_filename: false,
+            verbose: false,
         };
         assert_eq!(format_match("test line", 0, None, &config), "1:test line");
 
@@ -109,6 +114,7 @@ mod tests {
             mode: OutputMode::FullLines,
             show_line_numbers: true,
             show_filename: true,
+            verbose: false,
         };
         assert_eq!(format_match("test line", 0, Some("file.txt"), &config), "file.txt:1:test line");
     }

@@ -4,6 +4,8 @@ pub enum Flag {
     CaseInsensitive,
     Invert,
     Count,
+    WordMatch,
+    Verbose,
 }
 
 impl Flag {
@@ -13,6 +15,8 @@ impl Flag {
             "-i" => Some(Flag::CaseInsensitive),
             "-c" => Some(Flag::Count),
             "-v" => Some(Flag::Invert),
+            "-w" => Some(Flag::WordMatch),
+            "-V" => Some(Flag::Verbose),
             _ => None,
         }
     }
@@ -37,6 +41,8 @@ mod tests {
         assert_eq!(Flag::from_arg("-i"), Some(Flag::CaseInsensitive));
         assert_eq!(Flag::from_arg("-c"), Some(Flag::Count));
         assert_eq!(Flag::from_arg("-v"), Some(Flag::Invert));
+        assert_eq!(Flag::from_arg("-w"), Some(Flag::WordMatch));
+        assert_eq!(Flag::from_arg("-V"), Some(Flag::Verbose));
         assert_eq!(Flag::from_arg("-x"), None);
         assert_eq!(Flag::from_arg("pattern"), None);
     }
@@ -83,6 +89,19 @@ mod tests {
         ];
         let flags = parse_flags(&args);
         assert_eq!(flags, vec![Flag::LineNumbers, Flag::CaseInsensitive]);
+    }
+
+    #[test]
+    fn test_parse_flags_with_verbose() {
+        let args = vec![
+            "program".to_string(),
+            "-V".to_string(),
+            "-n".to_string(),
+            "pattern".to_string(),
+            "file.txt".to_string()
+        ];
+        let flags = parse_flags(&args);
+        assert_eq!(flags, vec![Flag::Verbose, Flag::LineNumbers]);
     }
 
     #[test]

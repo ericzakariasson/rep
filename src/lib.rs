@@ -21,6 +21,11 @@ pub fn run(args: Vec<String>) -> Result<()> {
     let search_config = SearchConfig::from_flags(&parsed_args.flags);
     let output_config = OutputConfig::new(&parsed_args.flags, file_paths.len() > 1);
     
+    if output_config.verbose {
+        eprintln!("Processing {} file(s)", file_paths.len());
+        eprintln!("---");
+    }
+    
     for path in file_paths {
         process_file(&path, &parsed_args.pattern, &search_config, &output_config)?;
     }
@@ -35,9 +40,23 @@ fn process_file(
     output_config: &OutputConfig,
 ) -> Result<()> {
     let filename = path.to_string_lossy();
+    
+    if output_config.verbose {
+        eprintln!("Searching in file: {}", filename);
+        eprintln!("Pattern: \"{}\"", pattern);
+        eprintln!("Search options: case_insensitive={}, invert_match={}, word_match={}", 
+                  search_config.case_insensitive, 
+                  search_config.invert_match,
+                  search_config.word_match);
+    }
+    
     let contents = read_file_contents(path)?;
     
     let search_result = search(&contents, pattern, search_config);
+    
+    if output_config.verbose {
+        eprintln!("Found {} matches", search_result.total_count);
+    }
     
     match output_config.mode {
         OutputMode::Count => {
