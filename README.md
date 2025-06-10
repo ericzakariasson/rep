@@ -1,10 +1,10 @@
-# grepr
+# rep
 
 A simple grep implementation in Rust.
 
 ## Overview
 
-grepr is a command-line tool that searches for patterns in text files, similar to the Unix grep utility.
+rep is a command-line tool that searches for patterns in text files, similar to the Unix grep utility.
 
 ## Features
 
@@ -17,19 +17,19 @@ grepr is a command-line tool that searches for patterns in text files, similar t
 ## Usage
 
 ```bash
-grepr [FLAGS] PATTERN [FILES...]
+rep [FLAGS] PATTERN [FILES...]
 ```
 
 ### Examples
 
 Search for a pattern in a file:
 ```bash
-grepr "hello" file.txt
+rep "hello" file.txt
 ```
 
 Search in multiple files:
 ```bash
-grepr "pattern" file1.txt file2.txt
+rep "pattern" file1.txt file2.txt
 ```
 
 ## Building
