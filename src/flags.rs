@@ -4,7 +4,6 @@ pub enum Flag {
     CaseInsensitive,
     Invert,
     Count,
-    WordMatch,
     Verbose,
 }
 
@@ -15,7 +14,6 @@ impl Flag {
             "-i" => Some(Flag::CaseInsensitive),
             "-c" => Some(Flag::Count),
             "-v" => Some(Flag::Invert),
-            "-w" => Some(Flag::WordMatch),
             "-V" => Some(Flag::Verbose),
             _ => None,
         }
@@ -41,7 +39,6 @@ mod tests {
         assert_eq!(Flag::from_arg("-i"), Some(Flag::CaseInsensitive));
         assert_eq!(Flag::from_arg("-c"), Some(Flag::Count));
         assert_eq!(Flag::from_arg("-v"), Some(Flag::Invert));
-        assert_eq!(Flag::from_arg("-w"), Some(Flag::WordMatch));
         assert_eq!(Flag::from_arg("-V"), Some(Flag::Verbose));
         assert_eq!(Flag::from_arg("-x"), None);
         assert_eq!(Flag::from_arg("pattern"), None);

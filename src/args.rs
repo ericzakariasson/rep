@@ -10,7 +10,7 @@ pub struct ParsedArgs {
 
 impl ParsedArgs {
     fn usage_string(program_name: &str) -> String {
-        format!("Usage: {} [-n] [-i] [-c] [-v] <pattern> <filename>", program_name)
+        format!("Usage: {} [-n] [-i] [-c] [-V] <pattern> <filename>", program_name)
     }
 }
 
