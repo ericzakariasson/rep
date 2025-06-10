@@ -1,0 +1,9 @@
+---
+description: Adding a new flag
+globs: 
+alwaysApply: false
+---
+When adding a new flag in [flags.rs](mdc:src/flags.rs), make sure to 
+- Add test case
+- Verify order against other flags
+- Check for conflicting logic in [search.rs](mdc:src/search.rs)
