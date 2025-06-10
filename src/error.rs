@@ -7,6 +7,7 @@ pub enum RepError {
     GlobPatternError(String),
     IoError(String),
     NoFilesMatched,
+    UnknownFlag(String),
 }
 
 impl fmt::Display for RepError {
@@ -17,6 +18,7 @@ impl fmt::Display for RepError {
             RepError::GlobPatternError(pattern) => write!(f, "Invalid glob pattern: {}", pattern),
             RepError::IoError(msg) => write!(f, "IO error: {}", msg),
             RepError::NoFilesMatched => write!(f, "No files found matching patterns"),
+            RepError::UnknownFlag(flag) => write!(f, "Unknown flag: {}", flag),
         }
     }
 }

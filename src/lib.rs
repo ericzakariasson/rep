@@ -44,10 +44,9 @@ fn process_file(
     if output_config.verbose {
         eprintln!("Searching in file: {}", filename);
         eprintln!("Pattern: \"{}\"", pattern);
-        eprintln!("Search options: case_insensitive={}, invert_match={}, word_match={}", 
+        eprintln!("Search options: case_insensitive={}, invert_match={}", 
                   search_config.case_insensitive, 
-                  search_config.invert_match,
-                  search_config.word_match);
+                  search_config.invert_match);
     }
     
     let contents = read_file_contents(path)?;

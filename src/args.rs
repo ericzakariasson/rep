@@ -1,4 +1,4 @@
-use crate::flags::{Flag, parse_flags};
+use crate::flags::Flag;
 use crate::error::{RepError, Result};
 
 #[derive(Debug, PartialEq)]
@@ -23,21 +23,27 @@ pub fn parse_args(args: &[String]) -> Result<ParsedArgs> {
     
     let program_name = &args[0];
     
-    if args.len() < 3 {
-        return Err(RepError::InvalidArguments(
-            ParsedArgs::usage_string(program_name)
-        ));
+    // Accumulate flags and non-flag arguments while performing validation
+    let mut flags = Vec::new();
+    let mut non_flag_args: Vec<String> = Vec::new();
+
+    for arg in args.iter().skip(1) {
+        if arg.starts_with('-') {
+            match Flag::from_arg(arg) {
+                Some(flag) => flags.push(flag),
+                None => return Err(RepError::UnknownFlag(
+                    format!("{}\n{}", arg, ParsedArgs::usage_string(program_name))
+                )),
+            }
+        } else {
+            non_flag_args.push(arg.clone());
+        }
     }
-    
-    let flags = parse_flags(args);
-    let non_flag_args = extract_non_flag_args(args);
-    
+
     if non_flag_args.len() < 2 {
-        return Err(RepError::InvalidArguments(
-            ParsedArgs::usage_string(program_name)
-        ));
+        return Err(RepError::InvalidArguments(ParsedArgs::usage_string(program_name)));
     }
-    
+
     let pattern = non_flag_args[0].clone();
     let file_patterns = non_flag_args[1..].to_vec();
     
@@ -48,6 +54,7 @@ pub fn parse_args(args: &[String]) -> Result<ParsedArgs> {
     })
 }
 
+#[allow(dead_code)]
 fn extract_non_flag_args(args: &[String]) -> Vec<String> {
     args.iter()
         .skip(1)
