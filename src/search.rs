@@ -117,4 +117,67 @@ mod tests {
         assert_eq!(result.total_count, 0);
         assert!(result.matches.is_empty());
     }
+
+    #[test]
+    fn test_complex_word_matching() {
+        // Test complex word matching scenarios similar to grep -w behavior
+        let content = "The cat in the hat\n\
+                      A cat caught a mouse\n\
+                      concatenate this string\n\
+                      scattered cats everywhere\n\
+                      cat, dog, and bird\n\
+                      The CAT is sleeping\n\
+                      category: important\n\
+                      cat123 is not a word\n\
+                      123cat also not a word\n\
+                      just cat alone";
+        
+        // Test 1: Word match should only match whole word "cat", not partial matches
+        let config = SearchConfig {
+            case_insensitive: false,
+            invert_match: false,
+        };
+        
+        let result = search(content, "cat", &config);
+        assert_eq!(result.total_count, 4, "Should match only whole word 'cat'");
+        
+        // Verify the matched lines contain only whole word matches
+        let expected_lines = vec![
+            "The cat in the hat",
+            "A cat caught a mouse", 
+            "cat, dog, and bird",
+            "just cat alone"
+        ];
+        
+        for (i, expected) in expected_lines.iter().enumerate() {
+            assert_eq!(result.matches[i].content, *expected);
+        }
+        
+        // Test 2: Case insensitive word matching
+        let config_insensitive = SearchConfig {
+            case_insensitive: true,
+            invert_match: false,
+        };
+        
+        let result_insensitive = search(content, "cat", &config_insensitive);
+        assert_eq!(result_insensitive.total_count, 5, "Should match 'cat' and 'CAT' case-insensitively");
+        
+        // Test 3: Regular substring search (no word matching) should match more
+        let config_substring = SearchConfig {
+            case_insensitive: false,
+            invert_match: false,
+        };
+        
+        let result_substring = search(content, "cat", &config_substring);
+        assert_eq!(result_substring.total_count, 9, "Substring search should match partial words too");
+        
+        // Test 4: Word matching with inversion
+        let config_inverted = SearchConfig {
+            case_insensitive: false,
+            invert_match: true,
+        };
+        
+        let result_inverted = search(content, "cat", &config_inverted);
+        assert_eq!(result_inverted.total_count, 6, "Inverted word match should return lines without whole word 'cat'");
+    }
 } 
