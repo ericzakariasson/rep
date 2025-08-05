@@ -4,16 +4,32 @@ use glob::glob;
 use crate::error::{RepError, Result};
 
 pub fn expand_file_patterns(patterns: &[String]) -> Result<Vec<PathBuf>> {
+    if patterns.is_empty() {
+        return Err(RepError::InvalidArguments(
+            "No file patterns provided. Please specify at least one file or pattern.".to_string()
+        ));
+    }
+
     let mut file_paths = Vec::new();
     
     for pattern in patterns {
         match glob(pattern) {
             Ok(paths) => {
+                let mut pattern_matched = false;
                 for entry in paths {
                     match entry {
-                        Ok(path) => file_paths.push(path),
-                        Err(e) => return Err(RepError::GlobPatternError(e.to_string())),
+                        Ok(path) => {
+                            pattern_matched = true;
+                            file_paths.push(path);
+                        },
+                        Err(e) => return Err(RepError::GlobPatternError(
+                            format!("Error processing glob pattern '{}': {}", pattern, e)
+                        )),
                     }
+                }
+                
+                if !pattern_matched {
+                    eprintln!("⚠️  Warning: Pattern '{}' matched no files", pattern);
                 }
             }
             Err(e) => {
@@ -32,13 +48,38 @@ pub fn expand_file_patterns(patterns: &[String]) -> Result<Vec<PathBuf>> {
 }
 
 pub fn read_file_contents(path: &PathBuf) -> Result<String> {
+    // Check if path exists first for better error messages
+    if !path.exists() {
+        return Err(RepError::FileNotFound(path.to_string_lossy().to_string()));
+    }
+    
+    // Check if it's a directory
+    if path.is_dir() {
+        return Err(RepError::IoError(
+            format!("'{}' is a directory, not a file", path.to_string_lossy())
+        ));
+    }
+    
     match fs::read_to_string(path) {
         Ok(contents) => Ok(contents),
         Err(e) => {
             let filename = path.to_string_lossy();
-            Err(RepError::IoError(
-                format!("Error reading file {}: {}", filename, e)
-            ))
+            let error_msg = match e.kind() {
+                std::io::ErrorKind::PermissionDenied => {
+                    format!("Permission denied when reading file '{}'. Check file permissions.", filename)
+                },
+                std::io::ErrorKind::NotFound => {
+                    format!("File '{}' not found", filename)
+                },
+                std::io::ErrorKind::InvalidData => {
+                    format!("File '{}' contains invalid UTF-8 data. Try a different file or use a binary-safe tool.", filename)
+                },
+                _ => {
+                    format!("Error reading file '{}': {}", filename, e)
+                }
+            };
+            
+            Err(RepError::IoError(error_msg))
         }
     }
 }

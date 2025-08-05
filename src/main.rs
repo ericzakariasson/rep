@@ -6,6 +6,8 @@ fn main() {
     
     if let Err(e) = rep::run(args) {
         eprintln!("{}", e);
+        eprintln!();
+        eprintln!("💭 Need help? Run with --help for usage information");
         process::exit(1);
     }
 }
