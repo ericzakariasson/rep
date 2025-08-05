@@ -14,6 +14,7 @@ pub struct MatchedLine {
 pub struct SearchConfig {
     pub case_insensitive: bool,
     pub invert_match: bool,
+    pub word_match: bool,
 }
 
 impl SearchConfig {
@@ -21,6 +22,7 @@ impl SearchConfig {
         Self {
             case_insensitive: flags.contains(&Flag::CaseInsensitive),
             invert_match: flags.contains(&Flag::Invert),
+            word_match: flags.contains(&Flag::WordMatch),
         }
     }
 }
@@ -30,7 +32,24 @@ pub fn search(content: &str, pattern: &str, config: &SearchConfig) -> SearchResu
         .lines()
         .enumerate()
         .filter_map(|(line_number, line)| {
-            let is_match = if config.case_insensitive {
+            let is_match = if config.word_match {
+                // Word boundary matching
+                let word_pattern = if config.case_insensitive {
+                    pattern.to_lowercase()
+                } else {
+                    pattern.to_string()
+                };
+                
+                let search_line = if config.case_insensitive {
+                    line.to_lowercase()
+                } else {
+                    line.to_string()
+                };
+                
+                // Simple word boundary check - pattern must be surrounded by non-alphanumeric chars
+                search_line.split(|c: char| !c.is_alphanumeric())
+                    .any(|word| word == word_pattern)
+            } else if config.case_insensitive {
                 line.to_lowercase().contains(&pattern.to_lowercase())
             } else {
                 line.contains(pattern)
@@ -71,6 +90,7 @@ mod tests {
         let config = SearchConfig {
             case_insensitive: false,
             invert_match: false,
+            word_match: false,
         };
         
         let result = search(content, "two", &config);
@@ -85,6 +105,7 @@ mod tests {
         let config = SearchConfig {
             case_insensitive: true,
             invert_match: false,
+            word_match: false,
         };
         
         let result = search(content, "line", &config);
@@ -97,6 +118,7 @@ mod tests {
         let config = SearchConfig {
             case_insensitive: false,
             invert_match: true,
+            word_match: false,
         };
         
         let result = search(content, "two", &config);
@@ -111,6 +133,7 @@ mod tests {
         let config = SearchConfig {
             case_insensitive: false,
             invert_match: false,
+            word_match: false,
         };
         
         let result = search(content, "four", &config);
